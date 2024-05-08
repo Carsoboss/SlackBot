@@ -36,6 +36,6 @@ app.event("app_mention", async ({ event, say }) => {
   } catch (error) {
     logger.error(error);
 
-    await say("Oops, something went wrong 😭. Please try again later.");
+    await say("Oops, something went wrong. Please try again later.");
   }
 });
