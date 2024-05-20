@@ -1,70 +1,38 @@
 const app = require("#configs/app");
-const { WebClient } = require("@slack/web-api");
-const { appLogger: logger, responseLogger } = require("#configs/logger");
 const openAICommand = require("#configs/openai");
-const env = require("#configs/env");
+const { appLogger: logger, slackbotLogger } = require("#configs/logger");
+const { WebClient } = require("@slack/web-api");
 
-const slackClient = new WebClient(env.slack.botToken); // Ensure this uses the Bot User OAuth Token
-const userCache = {};
-
-async function getUserInfo(userId) {
-  if (userCache[userId]) {
-    return userCache[userId];
-  }
-
-  try {
-    const result = await slackClient.users.info({ user: userId });
-    logger.info(`Fetched user info: ${JSON.stringify(result)}`);
-
-    if (!result.ok) {
-      throw new Error(`Error fetching user info: ${result.error}`);
-    }
-
-    const userInfo = {
-      id: userId,
-      name: result.user.real_name || result.user.name,
-    };
-
-    userCache[userId] = userInfo;
-    return userInfo;
-  } catch (error) {
-    logger.error(`Error fetching user info for ${userId}: ${error.message}`);
-    logger.error(`Full error: ${JSON.stringify(error, null, 2)}`);
-    return { id: userId, name: "Unknown User" };
-  }
-}
+const web = new WebClient(process.env.SLACK_BOT_TOKEN);
 
 app.message(async ({ event, say }) => {
-  const userId = event.user;
-  const userInfo = await getUserInfo(userId);
-
-  responseLogger.info(
-    `Received message from ${userInfo.name} (${userInfo.id}): ${event.text}`
-  );
+  logger.debug("Received message", event);
 
   try {
-    const answer = await openAICommand.chat(userId, event.text, {
+    const userId = event.user;
+
+    // Fetch user's profile information
+    const userInfo = await web.users.info({ user: userId });
+    const userName = userInfo.user.profile.real_name || userInfo.user.name;
+
+    const userMessage = event.text;
+
+    // Log the user's message with the username
+    slackbotLogger.info(`User (${userName}): ${userMessage}`);
+
+    const answer = await openAICommand.chat(userId, userMessage, {
       user: userId,
     });
 
-    responseLogger.info(
-      `Response to ${userInfo.name} (${userInfo.id}): ${answer}`
-    );
-
     await say(answer);
-    logger.debug("Message completed");
+
+    // Log the bot's response
+    slackbotLogger.info(`Bot: ${answer}`);
+
+    logger.debug("Message processing completed");
   } catch (error) {
     logger.error(error);
 
-    const errorMessage =
-      "Oops, something went wrong 😭. Please try again later.";
-
-    responseLogger.info(
-      `Response to ${userInfo.name} (${userInfo.id}): ${errorMessage}`
-    );
-
-    await say(errorMessage);
+    await say("Oops, something went wrong 😭. Please try again later.");
   }
 });
-
-module.exports = app;

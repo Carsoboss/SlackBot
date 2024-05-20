@@ -184,3 +184,4 @@ openai-slack-bot integrates Helicone to monitor their usage, latency, and costs 
 2. On step 2, add the OpenAI key you used in the bot:
 <img width="652" alt="image" src="https://user-images.githubusercontent.com/6816342/227769528-786b9333-c72e-4479-9ce0-f5ac03db5faa.png"> -->
 # SlackBot
+
