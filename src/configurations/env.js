@@ -26,7 +26,6 @@ const getOpenAIAuth = (provider) => {
         apiKey: process.env.OPENAI_OPENAI_AUTH_API_KEY,
       };
     default:
-      // for backward compatibility of old env settings
       return {
         apiKey: process.env.OPENAI_API_KEY,
       };
