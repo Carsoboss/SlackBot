@@ -1,5 +1,5 @@
 const app = require("#configs/app");
-const { appLogger: logger } = require("#configs/logger");
+const { appLogger: logger, slackbotLogger } = require("#configs/logger");
 const generateEvents = require("#events/generateEvents");
 
 generateEvents();
@@ -26,7 +26,6 @@ process.on("unhandledRejection", (error) => {
 (async () => {
   // Start your app
   await app.start();
-
   logger.log("⚡️ Bolt app is running!");
   logger.log("log level: ", logger.level);
 })();
